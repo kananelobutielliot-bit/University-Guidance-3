@@ -101,8 +101,8 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
   })) || [];
 
   return (
-    <div className="-mx-8 -my-6">
-      <div className="bg-gradient-to-r from-[#04ADEE]/10 via-emerald-50 to-[#04ADEE]/10 border-b border-[#04ADEE]/20 px-8 py-5">
+    <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="bg-gradient-to-r from-[#04ADEE]/10 via-emerald-50 to-[#04ADEE]/10 border-b border-[#04ADEE]/20 rounded-t-lg px-8 py-5">
         <h2 className="text-2xl font-bold text-slate-900 mb-3">{studentName}</h2>
         {loading ? (
           <div className="flex items-center gap-2 text-slate-500">
@@ -147,7 +147,7 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
         )}
       </div>
 
-      <div className="px-10 py-6 pb-10 space-y-4">
+      <div className="bg-slate-50 rounded-b-lg px-8 py-6 pb-8 space-y-4 border-x border-b border-slate-200">
         {/* Course Grades Chart */}
         {academicData && chartData.length > 0 && (
           <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
