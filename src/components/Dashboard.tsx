@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { User } from '../services/authService';
 import Sidebar from './Sidebar';
-import Profile from './Profile';
+import StudentMyProfile from './StudentMyProfile';
 import AdmitProfiles from './AdmitProfiles';
 import AdmitProfileDetailsPage from './AdmitProfileDetailsPage';
 import Scholarships from './Scholarships';
@@ -31,7 +31,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
   const renderPage = () => {
     switch (currentPage) {
       case 'profile':
-        return <Profile user={user} />;
+        return <StudentMyProfile user={user} />;
       case 'admit-profiles':
         return <AdmitProfiles onViewProfile={(profileId: string) => {
           setSelectedProfileId(profileId);
@@ -69,7 +69,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
           />
         );
       default:
-        return <Profile user={user} />;
+        return <StudentMyProfile user={user} />;
     }
   };
 
