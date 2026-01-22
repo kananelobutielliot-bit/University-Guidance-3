@@ -147,7 +147,7 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
         )}
       </div>
 
-      <div className="px-8 py-6 space-y-4">
+      <div className="px-10 py-6 pb-10 space-y-4">
         {/* Course Grades Chart */}
         {academicData && chartData.length > 0 && (
           <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
