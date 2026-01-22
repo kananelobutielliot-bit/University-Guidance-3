@@ -12,15 +12,21 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  Edit2,
+  Save,
+  X,
+  Plus,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { userStorage } from '../services/userStorage';
 import { getStudentAcademicDetails, getStudentProfileData, StudentAcademicData, StudentProfileData } from '../services/firebaseAcademicService';
 import { calculateAge } from '../utils/dateHelpers';
+import { database } from '../config/firebase';
+import { ref, set } from 'firebase/database';
 
 interface StudentMyProfileProps {
   user?: any;
-  onNavigateToEssayEditor?: () => void;
+  onNavigateToEssayEditor?: (essayTitle?: string) => void;
 }
 
 const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToEssayEditor }) => {
@@ -34,6 +40,14 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
     supplementaryEssays: false,
     careerInterests: false,
   });
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [editingCareerInterests, setEditingCareerInterests] = useState(false);
+  const [editingSpecialCircumstances, setEditingSpecialCircumstances] = useState(false);
+  const [budgetValue, setBudgetValue] = useState('');
+  const [careerInterestsValue, setCareerInterestsValue] = useState<string[]>([]);
+  const [newCareerInterest, setNewCareerInterest] = useState('');
+  const [specialCircumstancesValue, setSpecialCircumstancesValue] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const studentName = user?.name || userStorage.getStoredUser()?.name || 'Student';
 
@@ -76,10 +90,74 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
     });
   };
 
+  const parseBudget = (budgetString: string | undefined): number => {
+    if (!budgetString) return 0;
+    const cleanedBudget = budgetString.replace(/[$,]/g, '');
+    const parsed = parseInt(cleanedBudget);
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const saveBudget = async (newBudget: string) => {
+    try {
+      setSaving(true);
+      const budgetRef = ref(database, `University Data/Student Profiles/${studentName}/Budget`);
+      await set(budgetRef, `$${newBudget}`);
+
+      setProfileData(prev => prev ? { ...prev, budget: `$${newBudget}` } : prev);
+      setEditingBudget(false);
+      setBudgetValue('');
+    } catch (error) {
+      console.error('Error saving budget:', error);
+      alert('Failed to save budget. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveCareerInterests = async (interests: string[]) => {
+    try {
+      setSaving(true);
+      const careerInterestsRef = ref(database, `University Data/Student Profiles/${studentName}/Career interests`);
+
+      const interestsObj: Record<string, boolean> = {};
+      interests.forEach(interest => {
+        interestsObj[interest] = true;
+      });
+
+      await set(careerInterestsRef, interestsObj);
+
+      setProfileData(prev => prev ? { ...prev, careerInterests: interests } : prev);
+      setEditingCareerInterests(false);
+      setCareerInterestsValue([]);
+      setNewCareerInterest('');
+    } catch (error) {
+      console.error('Error saving career interests:', error);
+      alert('Failed to save career interests. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSpecialCircumstances = async (circumstances: string) => {
+    try {
+      setSaving(true);
+      const specialCircumstancesRef = ref(database, `University Data/Student Profiles/${studentName}/Special Circumstances`);
+      await set(specialCircumstancesRef, circumstances);
+
+      setProfileData(prev => prev ? { ...prev, specialCircumstances: circumstances } : prev);
+      setEditingSpecialCircumstances(false);
+      setSpecialCircumstancesValue('');
+    } catch (error) {
+      console.error('Error saving special circumstances:', error);
+      alert('Failed to save special circumstances. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleEssayClick = (essayTitle: string) => {
-    alert(`To view or edit "${essayTitle}", please go to the Essay Editor tab.`);
     if (onNavigateToEssayEditor) {
-      onNavigateToEssayEditor();
+      onNavigateToEssayEditor(essayTitle);
     }
   };
 
@@ -137,12 +215,24 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
                 <div className="text-lg font-bold text-slate-900">{profileData.nationality}</div>
               </div>
             )}
-            {profileData?.budget && (
-              <div className="bg-white/80 backdrop-blur rounded-lg px-3 py-2 border border-slate-200">
-                <div className="text-xs text-slate-600 mb-0.5">Budget</div>
-                <div className="text-lg font-bold text-slate-900">${parseInt(profileData.budget as string).toLocaleString()}</div>
+            <div className="bg-white/80 backdrop-blur rounded-lg px-3 py-2 border border-slate-200">
+              <div className="flex items-center justify-between mb-0.5">
+                <div className="text-xs text-slate-600">Budget</div>
+                <button
+                  onClick={() => {
+                    setBudgetValue(profileData?.budget ? parseBudget(profileData.budget).toString() : '');
+                    setEditingBudget(true);
+                  }}
+                  className="text-[#04ADEE] hover:text-[#0396d5] transition-colors"
+                  title="Edit budget"
+                >
+                  <Edit2 className="w-3 h-3" />
+                </button>
               </div>
-            )}
+              <div className="text-lg font-bold text-slate-900">
+                {profileData?.budget ? `$${parseBudget(profileData.budget).toLocaleString()}` : 'Add'}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -384,24 +474,35 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
         )}
 
         {/* Career Interests */}
-        {profileData?.careerInterests && profileData.careerInterests.length > 0 && (
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-            <button
-              onClick={() => toggleSection('careerInterests')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-[#04ADEE]" />
-                <h3 className="text-base font-semibold text-slate-800">Career Interests</h3>
-              </div>
-              {expandedSections.careerInterests ? (
-                <ChevronUp className="w-5 h-5 text-slate-600" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-slate-600" />
-              )}
-            </button>
-            {expandedSections.careerInterests && (
-              <div className="px-4 pb-4 border-t border-slate-200">
+        <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+          <button
+            onClick={() => toggleSection('careerInterests')}
+            className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-[#04ADEE]" />
+              <h3 className="text-base font-semibold text-slate-800">Career Interests</h3>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCareerInterestsValue(profileData?.careerInterests || []);
+                  setEditingCareerInterests(true);
+                }}
+                className="text-[#04ADEE] hover:text-[#0396d5] transition-colors ml-2"
+                title={profileData?.careerInterests && profileData.careerInterests.length > 0 ? 'Edit career interests' : 'Add career interests'}
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+            </div>
+            {expandedSections.careerInterests ? (
+              <ChevronUp className="w-5 h-5 text-slate-600" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-slate-600" />
+            )}
+          </button>
+          {expandedSections.careerInterests && (
+            <div className="px-4 pb-4 border-t border-slate-200">
+              {profileData?.careerInterests && profileData.careerInterests.length > 0 ? (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {profileData.careerInterests.map((interest, index) => (
                     <span
@@ -412,26 +513,248 @@ const StudentMyProfile: React.FC<StudentMyProfileProps> = ({ user, onNavigateToE
                     </span>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-slate-500">No career interests added yet</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Special Circumstances */}
-        {profileData?.specialCircumstances && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-            <div className="flex items-center space-x-2 mb-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
               <AlertCircle className="w-5 h-5 text-amber-600" />
               <h2 className="text-xl font-bold text-gray-900">Special Circumstances</h2>
             </div>
-            <div className="prose max-w-none">
+            <button
+              onClick={() => {
+                setSpecialCircumstancesValue(profileData?.specialCircumstances || '');
+                setEditingSpecialCircumstances(true);
+              }}
+              className="text-[#04ADEE] hover:text-[#0396d5] transition-colors"
+              title={profileData?.specialCircumstances ? 'Edit special circumstances' : 'Add special circumstances'}
+            >
+              <Edit2 className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="prose max-w-none">
+            {profileData?.specialCircumstances ? (
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {profileData.specialCircumstances}
               </p>
+            ) : (
+              <p className="text-gray-500 italic">No special circumstances added yet</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Budget Modal */}
+      {editingBudget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Edit Budget</h3>
+              <button
+                onClick={() => {
+                  setEditingBudget(false);
+                  setBudgetValue('');
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Annual Budget (USD)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                <input
+                  type="number"
+                  value={budgetValue}
+                  onChange={(e) => setBudgetValue(e.target.value)}
+                  placeholder="5000"
+                  className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#04ADEE] focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => saveBudget(budgetValue)}
+                disabled={!budgetValue || saving}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#04ADEE] text-white px-4 py-2 rounded-lg hover:bg-[#0396d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditingBudget(false);
+                  setBudgetValue('');
+                }}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Edit Career Interests Modal */}
+      {editingCareerInterests && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Edit Career Interests</h3>
+              <button
+                onClick={() => {
+                  setEditingCareerInterests(false);
+                  setCareerInterestsValue([]);
+                  setNewCareerInterest('');
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={newCareerInterest}
+                  onChange={(e) => setNewCareerInterest(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && newCareerInterest.trim()) {
+                      setCareerInterestsValue([...careerInterestsValue, newCareerInterest.trim()]);
+                      setNewCareerInterest('');
+                    }
+                  }}
+                  placeholder="e.g., Software Engineering"
+                  className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#04ADEE] focus:border-transparent"
+                />
+                <button
+                  onClick={() => {
+                    if (newCareerInterest.trim()) {
+                      setCareerInterestsValue([...careerInterestsValue, newCareerInterest.trim()]);
+                      setNewCareerInterest('');
+                    }
+                  }}
+                  className="bg-[#04ADEE] text-white p-2 rounded-lg hover:bg-[#0396d5] transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {careerInterestsValue.map((interest, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2"
+                  >
+                    {interest}
+                    <button
+                      onClick={() => {
+                        setCareerInterestsValue(careerInterestsValue.filter((_, i) => i !== index));
+                      }}
+                      className="hover:text-blue-900"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => saveCareerInterests(careerInterestsValue)}
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#04ADEE] text-white px-4 py-2 rounded-lg hover:bg-[#0396d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditingCareerInterests(false);
+                  setCareerInterestsValue([]);
+                  setNewCareerInterest('');
+                }}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Special Circumstances Modal */}
+      {editingSpecialCircumstances && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Edit Special Circumstances</h3>
+              <button
+                onClick={() => {
+                  setEditingSpecialCircumstances(false);
+                  setSpecialCircumstancesValue('');
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Special Circumstances
+              </label>
+              <textarea
+                value={specialCircumstancesValue}
+                onChange={(e) => setSpecialCircumstancesValue(e.target.value)}
+                placeholder="Describe any special circumstances that may have affected your academic performance or life situation..."
+                rows={6}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#04ADEE] focus:border-transparent resize-none"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => saveSpecialCircumstances(specialCircumstancesValue)}
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 bg-[#04ADEE] text-white px-4 py-2 rounded-lg hover:bg-[#0396d5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  setEditingSpecialCircumstances(false);
+                  setSpecialCircumstancesValue('');
+                }}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -53,7 +53,13 @@ interface Essay {
   activities?: ActivityItem[];
 }
 
-const EssayEditor: React.FC = () => {
+interface EssayEditorProps {
+  selectedEssayTitle?: string | null;
+  returnToProfile?: boolean;
+  onBackToProfile?: () => void;
+}
+
+const EssayEditor: React.FC<EssayEditorProps> = ({ selectedEssayTitle, returnToProfile, onBackToProfile }) => {
   const [essays, setEssays] = useState<Essay[]>([]);
   const [showNewEssayForm, setShowNewEssayForm] = useState(false);
   const [selectedEssay, setSelectedEssay] = useState<Essay | null>(null);
@@ -151,8 +157,12 @@ const EssayEditor: React.FC = () => {
   };
 
   const handleBackToList = () => {
-    setViewMode('list');
-    setSelectedEssay(null);
+    if (returnToProfile && onBackToProfile) {
+      onBackToProfile();
+    } else {
+      setViewMode('list');
+      setSelectedEssay(null);
+    }
   };
 
   const cleanHtmlContent = (html: string): string => {
@@ -447,6 +457,16 @@ const EssayEditor: React.FC = () => {
     }
   }, [selectedEssay?.id]);
 
+  useEffect(() => {
+    if (selectedEssayTitle && essays.length > 0 && !selectedEssay) {
+      const essay = essays.find(e => e.title === selectedEssayTitle);
+      if (essay) {
+        setSelectedEssay(essay);
+        setViewMode('editor');
+      }
+    }
+  }, [selectedEssayTitle, essays, selectedEssay]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -721,7 +741,7 @@ const EssayEditor: React.FC = () => {
                     className="flex items-center gap-2 text-[#04ADEE] hover:text-[#0396d5] mb-3 transition-colors font-medium"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to Essays
+                    {returnToProfile ? 'Back to Profile' : 'Back to Essays'}
                   </button>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

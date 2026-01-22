@@ -27,11 +27,25 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [selectedCounselorEmail, setSelectedCounselorEmail] = useState<string>('');
   const [selectedCounselorName, setSelectedCounselorName] = useState<string>('');
+  const [selectedEssayTitle, setSelectedEssayTitle] = useState<string | null>(null);
+  const [returnToProfile, setReturnToProfile] = useState(false);
 
   const renderPage = () => {
     switch (currentPage) {
       case 'profile':
-        return <StudentMyProfile user={user} />;
+        return <StudentMyProfile
+          user={user}
+          onNavigateToEssayEditor={(essayTitle) => {
+            if (essayTitle) {
+              setSelectedEssayTitle(essayTitle);
+              setReturnToProfile(true);
+            } else {
+              setSelectedEssayTitle(null);
+              setReturnToProfile(false);
+            }
+            setCurrentPage('essay-editor');
+          }}
+        />;
       case 'admit-profiles':
         return <AdmitProfiles onViewProfile={(profileId: string) => {
           setSelectedProfileId(profileId);
@@ -52,7 +66,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
       case 'chat':
         return <Chat userRole="student" />;
       case 'essay-editor':
-        return <EssayEditor />;
+        return <EssayEditor
+          selectedEssayTitle={selectedEssayTitle}
+          returnToProfile={returnToProfile}
+          onBackToProfile={() => {
+            setCurrentPage('profile');
+            setSelectedEssayTitle(null);
+            setReturnToProfile(false);
+          }}
+        />;
       case 'profile-details':
         return selectedProfileId ? (
           <AdmitProfileDetailsPage
