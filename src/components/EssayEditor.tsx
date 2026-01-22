@@ -841,6 +841,13 @@ const EssayEditor: React.FC<EssayEditorProps> = ({ selectedEssayTitle, returnToP
             ) : (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                 <div className="border-b border-gray-200 px-6 py-4 bg-gradient-to-r from-gray-50 to-white">
+                  <button
+                    onClick={handleBackToList}
+                    className="flex items-center gap-2 text-[#04ADEE] hover:text-[#0396d5] mb-3 transition-colors font-medium"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    {returnToProfile ? 'Back to Profile' : 'Back to Essays'}
+                  </button>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">{selectedEssay.title}</h2>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs px-2.5 py-1 rounded-full ${getTypeColor(selectedEssay.type)}`}>
