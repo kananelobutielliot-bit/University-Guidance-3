@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { TrendingUp, Award, BookOpen, X, Users, UserCheck, LogOut, ChevronLeft, ChevronRight, GraduationCap, FileText, Calendar, MessageSquare, User, Settings, Search } from 'lucide-react';
+import { TrendingUp, Award, BookOpen, X, Users, UserCheck, LogOut, ChevronLeft, ChevronRight, GraduationCap, FileText, Calendar, MessageSquare, User, Settings, Search, FolderOpen } from 'lucide-react';
 import CounselorScholarshipsPage from './CounselorScholarshipsPage';
 import CounselorResourcesPage from './CounselorResourcesPage';
 import AssignmentModal from './AssignmentModal';
@@ -11,13 +11,14 @@ import MeetingRequests from './MeetingRequests';
 import Chat from './Chat';
 import StudentProfiles from './StudentProfiles';
 import StudentProfileDetails from './StudentProfileDetails';
+import EduCareDrive from './EduCareDrive';
 import { Counselor } from '../services/counselorAuthService';
 import { useNotificationCounts } from '../hooks/useNotificationCounts';
 import { getCounselorPoolData, PoolStudent } from '../services/poolManagementService';
 import { getAssignedStudentsFromFirebase, FirebaseAssignedStudent } from '../services/assignedStudentsService';
 import WeightingModal from './WeightingModal';
 
-type TabType = 'academic' | 'active' | 'assigned' | 'essays' | 'scholarships' | 'resources' | 'meetings' | 'inbox' | 'student_profiles';
+type TabType = 'academic' | 'active' | 'assigned' | 'essays' | 'scholarships' | 'resources' | 'meetings' | 'inbox' | 'student_profiles' | 'educare-drive';
 type CompositeFilter = 'all' | '90-100' | '80-89' | '70-79' | 'below-70';
 
 interface Student {
@@ -539,6 +540,20 @@ export default function CounselorDashboard({ counselor, onLogout }: CounselorDas
               <BookOpen className="w-5 h-5 flex-shrink-0" />
               {!sidebarCollapsed && <span>Resources</span>}
             </button>
+            <button
+              onClick={() => setActiveTab('educare-drive')}
+              className={`w-full flex items-center rounded-lg text-sm font-medium transition-all ${
+                sidebarCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5'
+              } ${
+                activeTab === 'educare-drive'
+                  ? 'bg-[#04ADEE] text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-50'
+              }`}
+              title={sidebarCollapsed ? 'EduCare Drive' : undefined}
+            >
+              <FolderOpen className="w-5 h-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span>EduCare Drive</span>}
+            </button>
           </div>
         </nav>
 
@@ -698,6 +713,10 @@ export default function CounselorDashboard({ counselor, onLogout }: CounselorDas
 
         {activeTab === 'resources' && (
           <CounselorResourcesPage onBack={() => setActiveTab('active')} onLogout={() => {}} />
+        )}
+
+        {activeTab === 'educare-drive' && (
+          <EduCareDrive counselorName={counselor.name} />
         )}
 
         {activeTab === 'active' && (

@@ -1,6 +1,7 @@
 // Firebase configuration
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqJNXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -34,5 +35,15 @@ try {
   throw error;
 }
 
-export { database };
+// Initialize Firebase Storage
+let storage;
+try {
+  storage = getStorage(app);
+  console.log('Firebase storage initialized successfully');
+} catch (error) {
+  console.error('Firebase storage initialization error:', error);
+  throw error;
+}
+
+export { database, storage };
 export default app;
