@@ -111,9 +111,10 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
       await loadStudentDocuments(selectedStudent);
       await loadDocumentCount();
       setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (err) {
-      setError('Failed to upload document');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to upload document';
+      setError(`Upload failed: ${errorMessage}`);
+      console.error('Upload error:', err);
     } finally {
       setUploading(false);
       event.target.value = '';
@@ -170,26 +171,26 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-[#04ADEE] to-[#0396d5] rounded-xl shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-[#04ADEE]/20 to-[#0396d5]/30 rounded-xl shadow-lg p-6 border border-[#04ADEE]/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/80 text-sm font-medium mb-1">Total Students</p>
-                <p className="text-4xl font-bold">{students.length}</p>
+                <p className="text-[#04ADEE] text-sm font-semibold mb-1">Total Students</p>
+                <p className="text-4xl font-bold text-gray-900">{students.length}</p>
               </div>
-              <div className="bg-white/20 p-4 rounded-lg">
-                <Users className="w-8 h-8" />
+              <div className="bg-[#04ADEE]/10 p-4 rounded-lg">
+                <Users className="w-8 h-8 text-[#04ADEE]" />
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl shadow-lg p-6 border border-green-500/20">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/80 text-sm font-medium mb-1">Total Documents</p>
-                <p className="text-4xl font-bold">{totalDocuments}</p>
+                <p className="text-green-600 text-sm font-semibold mb-1">Total Documents</p>
+                <p className="text-4xl font-bold text-gray-900">{totalDocuments}</p>
               </div>
-              <div className="bg-white/20 p-4 rounded-lg">
-                <Database className="w-8 h-8" />
+              <div className="bg-green-500/10 p-4 rounded-lg">
+                <Database className="w-8 h-8 text-green-600" />
               </div>
             </div>
           </div>

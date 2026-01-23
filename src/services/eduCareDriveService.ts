@@ -121,6 +121,10 @@ export const uploadDocument = async (
   counselorName: string
 ): Promise<void> => {
   try {
+    if (!storage) {
+      throw new Error('Firebase Storage is not initialized. Please check your Firebase configuration.');
+    }
+
     const timestamp = new Date();
     const formattedDate = `${String(timestamp.getDate()).padStart(2, '0')}/${String(timestamp.getMonth() + 1).padStart(2, '0')}/${timestamp.getFullYear()}`;
 
@@ -128,10 +132,14 @@ export const uploadDocument = async (
     const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const storageFileName = `educare_drive/${studentName}/${Date.now()}_${sanitizedFileName}`;
 
+    console.log('Uploading file to Firebase Storage:', storageFileName);
+
     const fileRef = storageRef(storage, storageFileName);
-    await uploadBytes(fileRef, file);
+    const uploadResult = await uploadBytes(fileRef, file);
+    console.log('File uploaded successfully:', uploadResult);
 
     const downloadURL = await getDownloadURL(fileRef);
+    console.log('Download URL obtained:', downloadURL);
 
     const driveRef = ref(database, 'University Data/EduCare Drive');
     const newDocRef = push(driveRef);
@@ -145,9 +153,21 @@ export const uploadDocument = async (
       'Uploaded on': formattedDate,
       uploadedAt: timestamp.toISOString(),
     });
-  } catch (error) {
+
+    console.log('Document metadata saved to database');
+  } catch (error: any) {
     console.error('Error uploading document:', error);
-    throw error;
+    if (error?.code === 'storage/unauthorized') {
+      throw new Error('Permission denied. Please check Firebase Storage security rules.');
+    } else if (error?.code === 'storage/canceled') {
+      throw new Error('Upload was canceled.');
+    } else if (error?.code === 'storage/unknown') {
+      throw new Error('An unknown error occurred. Please check your Firebase configuration.');
+    } else if (error?.message) {
+      throw new Error(error.message);
+    } else {
+      throw new Error('Failed to upload document. Please check your internet connection and try again.');
+    }
   }
 };
 
