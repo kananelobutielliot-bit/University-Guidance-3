@@ -171,7 +171,7 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-[#04ADEE]/20 to-[#0396d5]/30 rounded-xl shadow-lg p-6 border border-[#04ADEE]/20">
+          <div className="bg-[#04ADEE]/10 rounded-xl p-6 border border-[#04ADEE]/20">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[#04ADEE] text-sm font-semibold mb-1">Total Students</p>
@@ -183,7 +183,7 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl shadow-lg p-6 border border-green-500/20">
+          <div className="bg-green-500/10 rounded-xl p-6 border border-green-500/20">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-600 text-sm font-semibold mb-1">Total Documents</p>
@@ -312,12 +312,13 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors"
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-[#04ADEE] transition-colors cursor-pointer group"
+                onClick={() => window.open(doc.link, '_blank')}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div className="flex-shrink-0">{getFileIcon(doc.fileType)}</div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{doc.fileName}</p>
+                    <p className="font-medium text-gray-900 truncate group-hover:text-[#04ADEE] transition-colors">{doc.fileName}</p>
                     <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
                       <span>Uploaded by: {doc.uploadedBy}</span>
                       <span>•</span>
@@ -330,13 +331,17 @@ const EduCareDrive: React.FC<EduCareDriveProps> = ({ counselorName }) => {
                     href={doc.link}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
                     className="p-2 text-[#04ADEE] hover:bg-blue-50 rounded-lg transition-colors"
                     title="Download"
                   >
                     <Download className="w-5 h-5" />
                   </a>
                   <button
-                    onClick={() => handleDeleteDocument(doc.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteDocument(doc.id);
+                    }}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete"
                   >
