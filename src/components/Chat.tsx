@@ -26,6 +26,7 @@ import {
   resetUnreadCount,
   getUnreadCount,
   getLastMessage,
+  isCounselor,
 } from '../services/chatService';
 import { getUserFromStorage } from '../services/userStorage';
 
@@ -77,11 +78,13 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
           return;
         }
 
-        const role = user.role === 'counselor' ? 'counselor' : 'student';
         const name = user.name;
-
-        console.log('User role:', role);
         console.log('User name:', name);
+
+        const isUserCounselor = await isCounselor(name);
+        const role = isUserCounselor ? 'counselor' : 'student';
+
+        console.log('Determined user role from Firebase:', role);
 
         setUserRole(role);
         setUserName(name);

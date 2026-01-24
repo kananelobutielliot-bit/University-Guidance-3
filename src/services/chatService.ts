@@ -32,6 +32,61 @@ const getInitials = (name: string): string => {
   return name.substring(0, 2);
 };
 
+export const isCounselor = async (userName: string): Promise<boolean> => {
+  try {
+    console.log('=== Checking if user is a counselor ===');
+    console.log('User name:', userName);
+
+    const namePrefixCheck = userName.startsWith('Mr ') ||
+                           userName.startsWith('Ms ') ||
+                           userName.startsWith('Miss ');
+    console.log('Name starts with Mr/Ms/Miss:', namePrefixCheck);
+
+    const paths = [
+      'University Data/Data',
+      'Schoolss'
+    ];
+
+    for (const basePath of paths) {
+      console.log(`Checking path: ${basePath}`);
+      const dataRef = ref(database, basePath);
+      const dataSnapshot = await get(dataRef);
+
+      if (!dataSnapshot.exists()) {
+        console.log(`❌ Path not found: ${basePath}`);
+        continue;
+      }
+
+      const schoolsData = dataSnapshot.val();
+      const schoolNames = Object.keys(schoolsData);
+      console.log(`Found ${schoolNames.length} schools in ${basePath}:`, schoolNames);
+
+      for (const schoolName of schoolNames) {
+        const counselorsPath = `${basePath}/${schoolName}/Counsellors`;
+        const counselorsRef = ref(database, counselorsPath);
+        const counselorsSnapshot = await get(counselorsRef);
+
+        if (counselorsSnapshot.exists()) {
+          const counselors = counselorsSnapshot.val();
+
+          if (counselors[userName] === true) {
+            console.log(`✓ Found "${userName}" as counselor in ${basePath}/${schoolName}`);
+            return true;
+          }
+        }
+      }
+    }
+
+    console.log(`❌ "${userName}" not found as counselor in any Firebase node`);
+    console.log(`→ This user is a STUDENT`);
+    return false;
+  } catch (error) {
+    console.error('Error checking if user is counselor:', error);
+    console.log('→ Defaulting to STUDENT role');
+    return false;
+  }
+};
+
 const createChatId = (name1: string, name2: string): string => {
   return `${name1}${name2}`;
 };
