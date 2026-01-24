@@ -44,62 +44,56 @@ export const getChatParticipantsForCounselor = async (
   try {
     console.log('Getting chat participants for counselor:', counselorName);
 
-    const caseloadsRef = ref(database, 'University Data/Caseloads');
-    const caseloadsSnapshot = await get(caseloadsRef);
+    const dataRef = ref(database, 'University Data/Data');
+    const dataSnapshot = await get(dataRef);
 
-    if (caseloadsSnapshot.exists()) {
-      const caseloads = caseloadsSnapshot.val();
-      console.log('Caseloads data:', caseloads);
-      console.log('Available counselor names in caseloads:', Object.keys(caseloads));
+    if (dataSnapshot.exists()) {
+      const data = dataSnapshot.val();
+      console.log('Data node exists, searching through schools...');
 
-      if (caseloads[counselorName]) {
-        const students = caseloads[counselorName];
-        console.log('Found students for counselor:', students);
-        Object.keys(students).forEach((studentName) => {
-          participants.push({
-            name: studentName,
-            role: 'student',
-            initials: getInitials(studentName),
-          });
-        });
-        console.log('Added students to participants:', participants.filter(p => p.role === 'student'));
-      } else {
-        console.warn('Counselor not found in caseloads:', counselorName);
-        console.warn('Available counselor names:', Object.keys(caseloads));
-      }
-    } else {
-      console.warn('No caseloads data exists in Firebase');
-    }
+      for (const schoolName in data) {
+        const school = data[schoolName];
+        console.log(`Checking school: ${schoolName}`);
 
-    const schoolCounselorsRef = ref(database, 'University Data/School Counsellors');
-    const schoolCounselorsSnapshot = await get(schoolCounselorsRef);
+        if (school.Counsellors && school.Counsellors[counselorName]) {
+          console.log(`Found counselor ${counselorName} in school: ${schoolName}`);
 
-    if (schoolCounselorsSnapshot.exists()) {
-      const schools = schoolCounselorsSnapshot.val();
-      console.log('School Counsellors data:', schools);
-      console.log('Available schools:', Object.keys(schools));
-
-      for (const schoolName in schools) {
-        const counselors = schools[schoolName];
-        console.log(`Checking school: ${schoolName}`, counselors);
-
-        if (counselors[counselorName]) {
-          console.log(`Found counselor ${counselorName} in school ${schoolName}`);
-          Object.keys(counselors).forEach((counselorKey) => {
-            if (counselorKey !== counselorName) {
+          if (school.Students) {
+            console.log('Adding students from school:', schoolName);
+            Object.keys(school.Students).forEach((studentName) => {
               participants.push({
-                name: counselorKey,
-                role: 'counselor',
-                initials: getInitials(counselorKey),
+                name: studentName,
+                role: 'student',
+                initials: getInitials(studentName),
               });
-            }
-          });
-          console.log('Added colleague counselors to participants:', participants.filter(p => p.role === 'counselor'));
+            });
+            console.log('Added students:', participants.filter(p => p.role === 'student'));
+          }
+
+          if (school.Counsellors) {
+            console.log('Adding counselors from school:', schoolName);
+            Object.keys(school.Counsellors).forEach((counselorKey) => {
+              if (counselorKey !== counselorName) {
+                participants.push({
+                  name: counselorKey,
+                  role: 'counselor',
+                  initials: getInitials(counselorKey),
+                });
+              }
+            });
+            console.log('Added counselors:', participants.filter(p => p.role === 'counselor'));
+          }
+
           break;
         }
       }
+
+      if (participants.length === 0) {
+        console.warn('Counselor not found in any school:', counselorName);
+        console.warn('Available schools:', Object.keys(data));
+      }
     } else {
-      console.warn('No School Counsellors data exists in Firebase');
+      console.warn('No Data node exists in Firebase at University Data/Data');
     }
 
     console.log('Total participants found:', participants.length);
