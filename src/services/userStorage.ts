@@ -62,5 +62,21 @@ class UserStorageService {
 export const userStorage = new UserStorageService();
 
 export const getUserFromStorage = (): StoredUser | null => {
+  const counselorData = localStorage.getItem('counselor');
+  if (counselorData) {
+    try {
+      const counselor = JSON.parse(counselorData);
+      return {
+        username: counselor.email,
+        name: counselor.name,
+        grade: '',
+        role: 'counselor',
+        school: '',
+      };
+    } catch (error) {
+      console.error('Failed to parse counselor data:', error);
+    }
+  }
+
   return userStorage.getStoredUser();
 };
