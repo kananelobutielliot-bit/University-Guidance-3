@@ -25,11 +25,47 @@ export interface ChatConversation {
 }
 
 const getInitials = (name: string): string => {
-  const parts = name.trim().split(' ');
+  let cleanName = name.trim();
+
+  // Strip titles (Mr, Ms, Miss, Mrs) from the beginning
+  const titles = ['Mr ', 'Ms ', 'Miss ', 'Mrs '];
+  for (const title of titles) {
+    if (cleanName.startsWith(title)) {
+      cleanName = cleanName.substring(title.length);
+      break;
+    }
+  }
+
+  const parts = cleanName.trim().split(' ');
   if (parts.length >= 2) {
     return parts[0][0] + parts[parts.length - 1][0];
   }
-  return name.substring(0, 2);
+  return cleanName.substring(0, 2);
+};
+
+export const getAvatarColor = (name: string): string => {
+  // Generate consistent color based on name
+  const colors = [
+    '#04ADEE', // Blue
+    '#10B981', // Green
+    '#F59E0B', // Orange
+    '#EF4444', // Red
+    '#8B5CF6', // Purple
+    '#EC4899', // Pink
+    '#14B8A6', // Teal
+    '#F97316', // Dark Orange
+    '#6366F1', // Indigo
+    '#84CC16', // Lime
+  ];
+
+  // Hash the name to get a consistent index
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
 };
 
 export const isCounselor = async (userName: string): Promise<boolean> => {

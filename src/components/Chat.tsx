@@ -8,8 +8,6 @@ import {
   Check,
   CheckCheck,
   Search,
-  Phone,
-  Video,
   MoreVertical,
   Smile,
   X,
@@ -27,6 +25,7 @@ import {
   getUnreadCount,
   getLastMessage,
   isCounselor,
+  getAvatarColor,
 } from '../services/chatService';
 import { getUserFromStorage } from '../services/userStorage';
 
@@ -34,6 +33,7 @@ interface Conversation {
   participantName: string;
   participantRole: 'counselor' | 'student';
   initials: string;
+  avatarColor: string;
   lastMessage: string;
   unreadCount: number;
 }
@@ -114,6 +114,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
               participantName: participant.name,
               participantRole: participant.role,
               initials: participant.initials,
+              avatarColor: getAvatarColor(participant.name),
               lastMessage,
               unreadCount,
             };
@@ -237,7 +238,10 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
       <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
         <div className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end max-w-[70%]`}>
           {!isMe && (
-            <div className="w-8 h-8 rounded-full bg-[#04ADEE] flex items-center justify-center text-white font-semibold text-sm mr-2">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm mr-2"
+              style={{ backgroundColor: selectedConversation?.avatarColor || '#04ADEE' }}
+            >
               {selectedConversation?.initials || 'U'}
             </div>
           )}
@@ -247,7 +251,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
               className={`px-4 py-2 rounded-2xl ${
                 isMe
                   ? 'bg-[#04ADEE] text-white rounded-br-sm'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                  : 'bg-gray-200 text-gray-900 rounded-bl-sm'
               }`}
             >
               <p className="text-sm">{message.content}</p>
@@ -279,7 +283,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-white">
       <div className={`${showMobileConversations ? 'block' : 'hidden'} lg:block w-full lg:w-80 bg-white border-r border-gray-200 flex flex-col`}>
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Messages</h2>
@@ -311,7 +315,10 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
                 }`}
               >
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-[#04ADEE] flex items-center justify-center text-white font-semibold">
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold"
+                    style={{ backgroundColor: conv.avatarColor }}
+                  >
                     {conv.initials}
                   </div>
                 </div>
@@ -351,7 +358,10 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-[#04ADEE] flex items-center justify-center text-white font-semibold">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                  style={{ backgroundColor: selectedConversation.avatarColor }}
+                >
                   {selectedConversation.initials}
                 </div>
               </div>
@@ -362,12 +372,6 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
             </div>
 
             <div className="flex items-center space-x-2">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Phone className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Video className="w-5 h-5 text-gray-600" />
-              </button>
               <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <MoreVertical className="w-5 h-5 text-gray-600" />
               </button>
@@ -450,7 +454,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
           </div>
         </div>
       ) : (
-        <div className="hidden lg:flex flex-1 items-center justify-center bg-gray-50">
+        <div className="hidden lg:flex flex-1 items-center justify-center bg-white">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <Send className="w-12 h-12 text-gray-400" />
