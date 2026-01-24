@@ -69,6 +69,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
     const initializeChat = async () => {
       try {
         const user = getUserFromStorage();
+        console.log('Retrieved user from storage:', user);
 
         if (!user) {
           console.error('No user found in storage');
@@ -79,19 +80,28 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
         const role = user.role === 'counselor' ? 'counselor' : 'student';
         const name = user.name;
 
+        console.log('User role:', role);
+        console.log('User name:', name);
+
         setUserRole(role);
         setUserName(name);
 
         let participants: ChatParticipant[] = [];
 
         if (role === 'counselor') {
+          console.log('Fetching participants for counselor...');
           participants = await getChatParticipantsForCounselor(name);
+          console.log('Counselor participants received:', participants);
         } else {
+          console.log('Fetching participants for student...');
           participants = await getChatParticipantsForStudent(name);
+          console.log('Student participants received:', participants);
         }
 
+        console.log('Initializing chat counts...');
         await initializeChatCounts(name, participants);
 
+        console.log('Getting conversation details...');
         const conversationsWithDetails = await Promise.all(
           participants.map(async (participant) => {
             const lastMessage = await getLastMessage(name, participant.name);
@@ -107,6 +117,7 @@ const Chat: React.FC<ChatProps> = ({ userRole: propUserRole }) => {
           })
         );
 
+        console.log('Conversations with details:', conversationsWithDetails);
         setConversations(conversationsWithDetails);
         setLoading(false);
       } catch (error) {
