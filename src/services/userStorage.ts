@@ -60,3 +60,7 @@ class UserStorageService {
 }
 
 export const userStorage = new UserStorageService();
+
+export const getUserFromStorage = (): StoredUser | null => {
+  return userStorage.getStoredUser();
+};
