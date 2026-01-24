@@ -42,65 +42,73 @@ export const getChatParticipantsForCounselor = async (
   const participants: ChatParticipant[] = [];
 
   try {
-    console.log('Getting chat participants for counselor:', counselorName);
+    console.log('=== Getting chat participants for counselor ===');
+    console.log('Counselor name:', counselorName);
 
-    const dataRef = ref(database, 'University Data/Data');
-    const dataSnapshot = await get(dataRef);
+    // Get the counselor's caseload (assigned students) - same path as academic tracking
+    const caseloadPath = `University Data/Caseloads/${counselorName}`;
+    console.log('Firebase Path for Caseload:', caseloadPath);
 
-    if (dataSnapshot.exists()) {
-      const data = dataSnapshot.val();
-      console.log('Data node exists, searching through schools...');
+    const caseloadRef = ref(database, caseloadPath);
+    const caseloadSnapshot = await get(caseloadRef);
 
-      for (const schoolName in data) {
-        const school = data[schoolName];
-        console.log(`Checking school: ${schoolName}`);
+    if (caseloadSnapshot.exists()) {
+      const caseload = caseloadSnapshot.val();
+      console.log('✓ Caseload found!');
+      console.log('Raw caseload data:', caseload);
 
-        if (school.Counsellors && school.Counsellors[counselorName]) {
-          console.log(`Found counselor ${counselorName} in school: ${schoolName}`);
+      // Get student names from caseload
+      const studentNames = Object.keys(caseload);
+      console.log(`Found ${studentNames.length} students:`, studentNames);
 
-          if (school.Students) {
-            console.log('Adding students from school:', schoolName);
-            Object.keys(school.Students).forEach((studentName) => {
-              participants.push({
-                name: studentName,
-                role: 'student',
-                initials: getInitials(studentName),
-              });
-            });
-            console.log('Added students:', participants.filter(p => p.role === 'student'));
-          }
-
-          if (school.Counsellors) {
-            console.log('Adding counselors from school:', schoolName);
-            Object.keys(school.Counsellors).forEach((counselorKey) => {
-              if (counselorKey !== counselorName) {
-                participants.push({
-                  name: counselorKey,
-                  role: 'counselor',
-                  initials: getInitials(counselorKey),
-                });
-              }
-            });
-            console.log('Added counselors:', participants.filter(p => p.role === 'counselor'));
-          }
-
-          break;
-        }
-      }
-
-      if (participants.length === 0) {
-        console.warn('Counselor not found in any school:', counselorName);
-        console.warn('Available schools:', Object.keys(data));
-      }
+      // Add students as chat participants
+      studentNames.forEach((studentName) => {
+        participants.push({
+          name: studentName,
+          role: 'student',
+          initials: getInitials(studentName),
+        });
+      });
+      console.log(`✓ Added ${studentNames.length} students to chat participants`);
     } else {
-      console.warn('No Data node exists in Firebase at University Data/Data');
+      console.error(`❌ No caseload found for counselor: ${counselorName}`);
+      console.error('Expected path:', caseloadPath);
     }
 
+    // Also get all other counselors from University Counsellors for inter-counselor chat
+    const counselorsPath = 'University Data/University Counsellors';
+    console.log('\nFetching other counselors from:', counselorsPath);
+
+    const counselorsRef = ref(database, counselorsPath);
+    const counselorsSnapshot = await get(counselorsRef);
+
+    if (counselorsSnapshot.exists()) {
+      const allCounselors = counselorsSnapshot.val();
+      console.log('✓ Found counselors node');
+
+      const counselorNames = Object.keys(allCounselors).filter(name => name !== counselorName);
+      console.log(`Found ${counselorNames.length} other counselors:`, counselorNames);
+
+      counselorNames.forEach((otherCounselorName) => {
+        participants.push({
+          name: otherCounselorName,
+          role: 'counselor',
+          initials: getInitials(otherCounselorName),
+        });
+      });
+      console.log(`✓ Added ${counselorNames.length} counselors to chat participants`);
+    } else {
+      console.log('ℹ️ No other counselors found');
+    }
+
+    console.log('\n=== Summary ===');
     console.log('Total participants found:', participants.length);
+    console.log('- Students:', participants.filter(p => p.role === 'student').length);
+    console.log('- Counselors:', participants.filter(p => p.role === 'counselor').length);
     console.log('All participants:', participants);
     return participants;
   } catch (error) {
-    console.error('Error getting chat participants for counselor:', error);
+    console.error('❌ Error getting chat participants for counselor:', error);
     return [];
   }
 };
