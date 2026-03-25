@@ -624,42 +624,41 @@ const AcademicTracking: React.FC = () => {
             <p className="text-slate-400 text-sm">Try adjusting your search</p>
           </div>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {filteredStudents.map((student, index) => {
               const rank = index + 1;
               return (
                 <div
                   key={student.studentName}
                   onClick={() => handleStudentClick(student.studentName)}
-                  className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-all cursor-pointer border border-slate-200 hover:border-[#04ADEE]"
+                  className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-lg transition-all duration-200 cursor-pointer border border-slate-100 hover:border-[#04ADEE]/30"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex-shrink-0">
-                      {getRankBadge(rank)}
+                  <div className="flex items-center gap-5">
+                    <div className="flex-shrink-0 bg-gradient-to-br from-[#04ADEE] to-[#0396D5] text-white px-4 py-2 rounded-full text-xs font-semibold shadow-sm">
+                      #{rank}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-base font-semibold text-slate-800 mb-2">{student.studentName}</h3>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="w-3.5 h-3.5 text-slate-500" />
-                          <span className="text-sm text-slate-600">
-                            {student.numCourses} {student.numCourses === 1 ? 'course' : 'courses'}
-                          </span>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-slate-900 mb-1.5 truncate">
+                        {student.studentName}
+                      </h3>
+                      <div className="flex items-center gap-2 text-slate-500">
+                        <BookOpen className="w-4 h-4" />
+                        <span className="text-sm font-medium">
+                          {student.numCourses} {student.numCourses === 1 ? 'course' : 'courses'}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-center">
+                    <div className="flex-shrink-0 flex items-center justify-center">
                       <CircularProgress
                         percentage={student.overallAverage}
-                        size={80}
-                        strokeWidth={6}
+                        size={72}
+                        strokeWidth={5}
                         color={getGradeColor(student.overallAverage)}
                       >
                         <div className="text-center">
-                          <p className="text-xl font-bold" style={{ color: getGradeColor(student.overallAverage) }}>
+                          <p className="text-lg font-bold" style={{ color: getGradeColor(student.overallAverage) }}>
                             {student.overallAverage}%
                           </p>
-                          <p className="text-[10px] text-slate-500">Avg</p>
                         </div>
                       </CircularProgress>
                     </div>
